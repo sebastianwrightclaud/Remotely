@@ -17,7 +17,7 @@ Tutorial: https://www.youtube.com/watch?v=t-TFvr7sZ6M (Thanks, @bmcgonag!)
 
 ```
 mkdir -p /var/www/remotely
-wget -q https://raw.githubusercontent.com/immense/Remotely/master/docker-compose/docker-compose.yml
+wget -q https://raw.githubusercontent.com/sebastianwrightclaud/Remotely/master/docker-compose/docker-compose.yml
 docker-compose up -d
 ```
 
