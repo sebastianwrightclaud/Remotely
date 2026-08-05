@@ -250,20 +250,32 @@ public partial class DevicesFrame : AuthComponentBase
         {
             var device = message.Device;
 
-            var collections = new[] { _allDevices, _filteredDevices };
+            var index = _allDevices.FindIndex(x => x.ID == device.ID);
 
-            foreach (var collection in collections)
+            if (index > -1)
             {
-                var index = collection.FindIndex(x => x.ID == device.ID);
-                if (index > -1)
-                {
-                    collection[index] = device;
-                }
-                else
-                {
-                    collection.Add(device);
-                }
+                _allDevices[index] = device;
             }
+            else
+            {
+                // The device wasn't part of the set we loaded for this user.
+                // Broadcasts are already filtered by permission server-side,
+                // but don't make this component the only thing standing
+                // between a user and a device they can't access.
+                if (User is null ||
+                    !DataService.DoesUserHaveAccessToDevice(device.ID, User))
+                {
+                    return;
+                }
+
+                _allDevices.Add(device);
+            }
+
+            // Invalidate the cached filter results so the next render
+            // re-applies the current group, search, and sort criteria.
+            // Adding to _filteredDevices directly would put devices on the
+            // page that don't match the active filter.
+            _lastFilterState = string.Empty;
 
             Debouncer.Debounce(
                    TimeSpan.FromSeconds(2),

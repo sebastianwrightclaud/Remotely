@@ -119,6 +119,49 @@ public class DataServiceTests
     }
 
     [TestMethod]
+    public void FilterUsersByDevicePermission_GivenUngroupedDevice_ReturnsOnlyAdministrators()
+    {
+        // Org1Device1 has no device group at this point.  GetDevicesForUser and
+        // DoesUserHaveAccessToDevice only surface ungrouped devices to
+        // administrators, so device state broadcasts must do the same.
+        var filtered = _dataService.FilterUsersByDevicePermission(
+            AllTestUserIds(),
+            _testData.Org1Device1.ID);
+
+        CollectionAssert.AreEquivalent(
+            new[] { _testData.Org1Admin1.Id, _testData.Org1Admin2.Id },
+            filtered);
+    }
+
+    [TestMethod]
+    public async Task FilterUsersByDevicePermission_GivenGroupedDevice_ReturnsAdminsAndGroupMembers()
+    {
+        var groupId = _testData.Org1Group1.ID;
+
+        _dataService.AddUserToDeviceGroup(
+            _testData.Org1Id,
+            groupId,
+            _testData.Org1User1.UserName!,
+            out _);
+
+        await _dataService.UpdateDevice(_testData.Org1Device1.ID, "", "", groupId, "");
+
+        var filtered = _dataService.FilterUsersByDevicePermission(
+            AllTestUserIds(),
+            _testData.Org1Device1.ID);
+
+        // Org1User2 is in the org but not the group, so it must stay out.
+        CollectionAssert.AreEquivalent(
+            new[]
+            {
+                _testData.Org1Admin1.Id,
+                _testData.Org1Admin2.Id,
+                _testData.Org1User1.Id
+            },
+            filtered);
+    }
+
+    [TestMethod]
     public async Task GetPendingScriptRuns_GivenMultipleRunsQueued_ReturnsOnlyLatest()
     {
         var now = Time.Now;
@@ -181,6 +224,21 @@ public class DataServiceTests
         Assert.AreEqual(0, pendingRuns.Count());
     }
 
+
+    private string[] AllTestUserIds()
+    {
+        return new[]
+        {
+            _testData.Org1Admin1.Id,
+            _testData.Org1Admin2.Id,
+            _testData.Org1User1.Id,
+            _testData.Org1User2.Id,
+            _testData.Org2Admin1.Id,
+            _testData.Org2Admin2.Id,
+            _testData.Org2User1.Id,
+            _testData.Org2User2.Id
+        };
+    }
 
     [TestCleanup]
     public void TestCleanup()

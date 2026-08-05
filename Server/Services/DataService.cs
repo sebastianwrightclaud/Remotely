@@ -2301,7 +2301,12 @@ public class DataService : IDataService
 
         if (string.IsNullOrWhiteSpace(device.DeviceGroupID))
         {
+            // A device that isn't in a group is only visible to administrators,
+            // which is what GetDevicesForUser and DoesUserHaveAccessToDevice
+            // enforce.  Returning every user in the org here would push state
+            // updates for ungrouped devices to users who can't otherwise see them.
             return orgUsers
+                .Where(user => user.IsAdministrator)
                 .Select(x => x.Id)
                 .ToArray();
         }
