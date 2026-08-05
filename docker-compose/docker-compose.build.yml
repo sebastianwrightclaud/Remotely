@@ -7,6 +7,12 @@
 #
 # Find your current version under Server Config in the web UI.  If it's left
 # at the default, every agent will show as outdated (cosmetic, but noisy).
+#
+# The version key is required by the standalone docker-compose (v1), which
+# otherwise parses this as the legacy v1 format and rejects the top-level
+# networks and services keys.
+
+version: '3.4'
 
 networks:
   remotely:
