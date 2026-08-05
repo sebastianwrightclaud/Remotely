@@ -22,10 +22,16 @@ ARG VERSION=1.0.0.0
 WORKDIR /src
 COPY . .
 
+# LibraryRestore=false skips the LibMan restore that Microsoft.Web.LibraryManager.Build
+# runs before compiling.  Every library in Server/libman.json is already committed
+# under Server/wwwroot/lib, so the restore adds nothing, but it reaches out to cdnjs
+# and unpkg during the build and fails when they can't resolve a version or aren't
+# reachable from the build container.
 RUN dotnet publish ./Server/Server.csproj \
       --configuration Release \
       /p:Version=${VERSION} \
       /p:FileVersion=${VERSION} \
+      /p:LibraryRestore=false \
       --output /app/publish
 
 
